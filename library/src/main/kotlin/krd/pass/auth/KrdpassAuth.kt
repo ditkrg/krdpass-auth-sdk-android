@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalCoroutinesApi::class)
-
 package krd.pass.auth
 
 import android.app.Activity
@@ -75,8 +73,10 @@ object KrdpassAuth {
     @Volatile
     private var timeoutJob: Job? = null
 
-    // JWKS Cache
+    // JWKS Cache (read/written from IO-dispatched coroutines; keep visibility explicit).
+    @Volatile
     private var cachedJwkSource: com.nimbusds.jose.jwk.source.JWKSource<com.nimbusds.jose.proc.SecurityContext>? = null
+    @Volatile
     private var jwksCacheExpiresAt: Long = 0
 
     /**

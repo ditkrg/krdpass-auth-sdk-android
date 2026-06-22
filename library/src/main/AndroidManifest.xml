@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     
+    <!-- Package visibility (Android 11+): the SDK checks for and launches the KRDPass
+         provider app, which requires it to be queryable. Mirrors KrdpassEnvironment. -->
     <queries>
-        <!-- Allow querying for KRDPass app in production, staging, and development environments -->
         <package android:name="krd.pass" /> <!-- Production -->
-        <package android:name="krd.pass.staging" /> <!-- Staging -->
         <package android:name="krd.pass.dev" /> <!-- Development -->
     </queries>
     
