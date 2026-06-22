@@ -8,11 +8,9 @@ kotlin {
     jvmToolchain(17)
 }
 
-// Maven coordinates for the published core artifact.
-// Local / mavenLocal resolution uses this group:artifact:version, so the wrappers'
-// `implementation("krd.pass:krdpass-auth:<version>")` resolves after `publishToMavenLocal`.
-// NOTE: JitPack overrides the group to `com.github.<org>` at publish time — when this core
-// moves to its own repo, repoint the wrappers to the JitPack coordinate.
+// Maven coordinates for the published core artifact. Published to GitHub Packages
+// (see the publishing block below) as `krd.pass:krdpass-auth:<version>`; the wrappers
+// and external consumers resolve that exact coordinate from the GitHub Packages repo.
 group = "krd.pass"
 version = "1.0.0"
 

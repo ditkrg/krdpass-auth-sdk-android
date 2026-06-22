@@ -24,5 +24,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "krdpass-auth-sdk-android"
+rootProject.name = "DemoKrdPassAuth"
 include(":library")
+// The example is not shipped in the standalone vendor repo; only include it when present.
+if (file("example").exists()) include(":example:app")
