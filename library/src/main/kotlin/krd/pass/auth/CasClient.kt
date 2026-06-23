@@ -89,6 +89,7 @@ class CasClient(
         require(redirectUri.isNotBlank()) { "redirectUri cannot be blank" }
         require(scopes.isNotEmpty()) { "scopes cannot be empty" }
         val url = testBaseUrl?.let { "$it/connect/par" } ?: environment.parEndpoint
+        log("DEBUG", "PAR → $url (client_id=$clientId, redirect_uri=$redirectUri)")
 
         val requestBody = FormBody.Builder()
             .add("client_id", clientId)
@@ -113,8 +114,15 @@ class CasClient(
                 val responseBody = response.body?.string()
 
                 if (!response.isSuccessful) {
+                    log("ERROR", "PAR request failed (${response.code}): $responseBody")
+                    val reason = try {
+                        val j = JSONObject(responseBody ?: "{}")
+                        val err = j.optString("error", "")
+                        val desc = j.optString("error_description", "")
+                        if (desc.isNotBlank()) "$err: $desc" else if (err.isNotBlank()) err else responseBody
+                    } catch (_: Exception) { responseBody }
                     throw CasException(
-                        message = "PAR request failed",
+                        message = "PAR request failed (${response.code}): $reason",
                         statusCode = response.code
                     )
                 }
@@ -171,8 +179,15 @@ class CasClient(
                 val responseBody = response.body?.string()
 
                 if (!response.isSuccessful) {
+                    log("ERROR", "Token exchange failed (${response.code}): $responseBody")
+                    val reason = try {
+                        val j = JSONObject(responseBody ?: "{}")
+                        val err = j.optString("error", "")
+                        val desc = j.optString("error_description", "")
+                        if (desc.isNotBlank()) "$err: $desc" else if (err.isNotBlank()) err else responseBody
+                    } catch (_: Exception) { responseBody }
                     throw CasException(
-                        message = "Token exchange failed",
+                        message = "Token exchange failed (${response.code}): $reason",
                         statusCode = response.code
                     )
                 }

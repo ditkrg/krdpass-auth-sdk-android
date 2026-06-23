@@ -17,6 +17,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import java.security.MessageDigest
 import com.nimbusds.jose.JWSAlgorithm
+import com.nimbusds.jose.jwk.source.JWKSource
 import com.nimbusds.jose.jwk.source.JWKSourceBuilder
 import com.nimbusds.jose.proc.JWSVerificationKeySelector
 import com.nimbusds.jose.proc.SecurityContext
@@ -511,48 +512,69 @@ object KrdpassAuth {
     }
 
     private fun handleActivityResult(result: ActivityResult) {
-        val callback = activeResultCallback ?: return
+        if (activeResultCallback == null) return
         val currentConfig = config ?: return
-        
-        if (result.resultCode == Activity.RESULT_CANCELED) {
-             complete(AuthResult.Cancelled)
-             return
-        }
-        
-        val data = result.data
-        if (result.resultCode == Activity.RESULT_OK && data != null && data.data != null) {
-            val uri = data.data!!
-            
-            if (!currentConfig.isValidRedirectUri(uri)) {
-                complete(AuthResult.Error("invalid_redirect", "Redirect URI does not match configured host"))
-                return
-            }
-            
-            val code = uri.getQueryParameter("code")
-            val state = uri.getQueryParameter("state")
-            val error = uri.getQueryParameter("error")
 
-            if (code != null) {
-                // Fail closed: the returned state must be present AND equal to the
-                // state we sent. A missing or mismatched state is rejected.
-                val expectedState = currentState
-                if (expectedState.isNullOrBlank() || state.isNullOrBlank() || expectedState != state) {
-                    complete(AuthResult.Error("state_mismatch", "State missing or does not match the request (possible CSRF / response injection)"))
-                } else {
-                    complete(AuthResult.Success(code, state))
-                }
-            } else if (error != null) {
-                val canonicalError = when (error) {
-                    "access_denied", "user_cancelled", "login_required", "consent_denied" -> "cancelled"
-                    else -> error
-                }
-                complete(AuthResult.Error(canonicalError, uri.getQueryParameter("error_description")))
-            } else {
-                complete(AuthResult.Error("no_code", "No code received"))
-            }
-        } else {
-            complete(AuthResult.Error("platform_error", "Result not OK or no data"))
+        // Perform the Android-side extraction here; the security decision itself lives in the
+        // pure, unit-testable decideAuthResult() below.
+        val uri = result.data?.data
+        complete(
+            decideAuthResult(
+                resultCode = result.resultCode,
+                hasUriData = uri != null,
+                redirectValid = uri == null || currentConfig.isValidRedirectUri(uri),
+                code = uri?.getQueryParameter("code"),
+                returnedState = uri?.getQueryParameter("state"),
+                error = uri?.getQueryParameter("error"),
+                errorDescription = uri?.getQueryParameter("error_description"),
+                expectedState = currentState,
+            )
+        )
+    }
+
+    /**
+     * Pure auth-result decision, separated from the Android [ActivityResult]/[android.net.Uri]
+     * extraction so the CSRF / redirect / error-canonicalization policy is unit-testable.
+     *
+     * Fail-closed rules (mirrors RFC 6749 §10.12): a returned authorization code is accepted only
+     * when the redirect URI matched and the returned [returnedState] is present and equal to the
+     * [expectedState] we sent; a missing or mismatched state is rejected as a possible CSRF /
+     * response-injection attempt.
+     */
+    internal fun decideAuthResult(
+        resultCode: Int,
+        hasUriData: Boolean,
+        redirectValid: Boolean,
+        code: String?,
+        returnedState: String?,
+        error: String?,
+        errorDescription: String?,
+        expectedState: String?,
+    ): AuthResult {
+        if (resultCode == Activity.RESULT_CANCELED) {
+            return AuthResult.Cancelled
         }
+        if (resultCode != Activity.RESULT_OK || !hasUriData) {
+            return AuthResult.Error("platform_error", "Result not OK or no data")
+        }
+        if (!redirectValid) {
+            return AuthResult.Error("invalid_redirect", "Redirect URI does not match configured host")
+        }
+        if (code != null) {
+            return if (expectedState.isNullOrBlank() || returnedState.isNullOrBlank() || expectedState != returnedState) {
+                AuthResult.Error("state_mismatch", "State missing or does not match the request (possible CSRF / response injection)")
+            } else {
+                AuthResult.Success(code, returnedState)
+            }
+        }
+        if (error != null) {
+            val canonicalError = when (error) {
+                "access_denied", "user_cancelled", "login_required", "consent_denied" -> "cancelled"
+                else -> error
+            }
+            return AuthResult.Error(canonicalError, errorDescription)
+        }
+        return AuthResult.Error("no_code", "No code received")
     }
 
     private fun complete(result: AuthResult) {
@@ -645,17 +667,35 @@ object KrdpassAuth {
      * @throws KrdpassError.AuthenticationFailed if any check fails.
      */
     private fun validateIdToken(idToken: String?, config: KrdpassConfig, expectedNonce: String) {
+        validateIdTokenWithSource(
+            idToken = idToken,
+            jwkSource = getJwkSource(config.environment.jwksEndpoint),
+            issuer = config.environment.authServerUrl,
+            audience = config.clientId,
+            expectedNonce = expectedNonce,
+        )
+    }
+
+    /**
+     * Full client-only id_token trust decision, separated from JWKS-URL/network fetching so it can
+     * be unit-tested against an in-memory [JWKSource]. Verifies signature + iss + aud + exp via
+     * [verifyJwt], then enforces the nonce replay binding.
+     *
+     * @throws KrdpassError.AuthenticationFailed if any check fails.
+     */
+    internal fun validateIdTokenWithSource(
+        idToken: String?,
+        jwkSource: JWKSource<SecurityContext>,
+        issuer: String,
+        audience: String,
+        expectedNonce: String,
+        clockSkewSeconds: Long = 60,
+    ) {
         if (idToken.isNullOrBlank()) {
             throw KrdpassError.AuthenticationFailed("Token response did not include an id_token")
         }
         val claims = try {
-            verifyTokenInternal(
-                token = idToken,
-                jwksUrl = config.environment.jwksEndpoint,
-                issuer = config.environment.authServerUrl,
-                audience = config.clientId,
-                clockSkewSeconds = 60
-            )
+            verifyJwt(idToken, jwkSource, issuer, audience, clockSkewSeconds)
         } catch (e: Exception) {
             throw KrdpassError.AuthenticationFailed("ID token validation failed: ${e.message}")
         }
@@ -683,8 +723,20 @@ object KrdpassAuth {
         issuer: String?,
         audience: String?,
         clockSkewSeconds: Long
+    ): Map<String, Any?> = verifyJwt(token, getJwkSource(jwksUrl), issuer, audience, clockSkewSeconds)
+
+    /**
+     * Stateless RS256 JWT verification against a supplied [jwkSource]: signature, required `exp`,
+     * and (when supplied) `iss`/`aud`, plus clock-skew-tolerant exp/nbf/iat checks. Separated from
+     * [getJwkSource] so it is unit-testable with an in-memory JWKSet (no network).
+     */
+    internal fun verifyJwt(
+        token: String,
+        source: JWKSource<SecurityContext>,
+        issuer: String?,
+        audience: String?,
+        clockSkewSeconds: Long
     ): Map<String, Any?> {
-        val source = getJwkSource(jwksUrl)
         val selector = JWSVerificationKeySelector(JWSAlgorithm.Family.RSA, source)
         val processor = DefaultJWTProcessor<SecurityContext>().apply { jwsKeySelector = selector }
 
