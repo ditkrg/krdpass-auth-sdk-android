@@ -402,46 +402,71 @@ object KrdpassAuth {
      *  3. Signing cert SHA-256 matches a known fingerprint (cert mismatch → provider_not_installed).
      */
     private fun checkProviderInstalled(context: Context, environment: KrdpassEnvironment): String? {
-        val pm = context.packageManager
-        val pkg = environment.providerPackage
-
         val expected = environment.providerSigningCertsSha256
+        val isProduction = environment == KrdpassEnvironment.Production
+
+        // Fast path: no pin configured — don't even query PackageManager.
+        if (expected.isEmpty()) {
+            if (!isProduction) {
+                log("WARN", "Provider cert pinning is disabled for $environment (empty pin set).")
+            }
+            return evaluateSigningPin(null, expected, isProduction)
+        }
+
+        val installedCerts: Set<String>? = try {
+            collectSigningCertSha256(context.packageManager, environment.providerPackage)
+        } catch (_: PackageManager.NameNotFoundException) {
+            null
+        }
+        return evaluateSigningPin(installedCerts, expected, isProduction)
+    }
+
+    /**
+     * Pure fail-closed pinning decision, separated from PackageManager I/O so the security
+     * policy is unit-testable. Returns an error description, or null if the launch may proceed.
+     *
+     * @param installedCerts SHA-256 fingerprints of the installed provider's signing certs,
+     *   or null if the provider is not installed. Ignored when [expected] is empty.
+     */
+    internal fun evaluateSigningPin(
+        installedCerts: Set<String>?,
+        expected: Set<String>,
+        isProduction: Boolean,
+    ): String? {
         if (expected.isEmpty()) {
             // Production must always pin; an empty set is a build misconfiguration, not a valid skip.
-            if (environment == KrdpassEnvironment.Production) {
-                return "KRDPass installation could not be verified (provider signing pin is not configured)."
-            }
-            // Development: pinning is optional so emulators / locally-built debug APKs can launch.
-            log("WARN", "Provider cert pinning is disabled for $environment (empty pin set).")
-            return null
-        }
-
-        val actualCerts: Set<String> = try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                val info = pm.getPackageInfo(pkg, PackageManager.GET_SIGNING_CERTIFICATES)
-                val signingInfo = info.signingInfo
-                    ?: return "KRDPass is not installed. Download it from the Play Store."
-                val sigs = if (signingInfo.hasMultipleSigners()) signingInfo.apkContentsSigners.toList()
-                            else signingInfo.signingCertificateHistory.toList()
-                sigs.mapTo(mutableSetOf()) { certSha256Hex(it.toByteArray()) }
+            return if (isProduction) {
+                "KRDPass installation could not be verified (provider signing pin is not configured)."
             } else {
-                @Suppress("DEPRECATION")
-                val info = pm.getPackageInfo(pkg, PackageManager.GET_SIGNATURES)
-                @Suppress("DEPRECATION")
-                (info.signatures ?: emptyArray()).mapTo(mutableSetOf()) { certSha256Hex(it.toByteArray()) }
+                null // Development: pinning optional for emulators / locally-built debug APKs.
             }
-        } catch (_: PackageManager.NameNotFoundException) {
+        }
+        if (installedCerts == null) {
             return "KRDPass is not installed. Download it from the Play Store."
         }
-
-        if (actualCerts.intersect(expected).isEmpty()) {
+        if (installedCerts.intersect(expected).isEmpty()) {
             return "KRDPass installation could not be verified. Please reinstall from the Play Store."
         }
-
         return null
     }
 
-    private fun certSha256Hex(der: ByteArray): String {
+    /** Collects the SHA-256 fingerprints of [pkg]'s signing certs. Throws NameNotFound if absent. */
+    private fun collectSigningCertSha256(pm: PackageManager, pkg: String): Set<String> {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val info = pm.getPackageInfo(pkg, PackageManager.GET_SIGNING_CERTIFICATES)
+            val signingInfo = info.signingInfo ?: throw PackageManager.NameNotFoundException(pkg)
+            val sigs = if (signingInfo.hasMultipleSigners()) signingInfo.apkContentsSigners.toList()
+                        else signingInfo.signingCertificateHistory.toList()
+            sigs.mapTo(mutableSetOf()) { certSha256Hex(it.toByteArray()) }
+        } else {
+            @Suppress("DEPRECATION")
+            val info = pm.getPackageInfo(pkg, PackageManager.GET_SIGNATURES)
+            @Suppress("DEPRECATION")
+            (info.signatures ?: emptyArray()).mapTo(mutableSetOf()) { certSha256Hex(it.toByteArray()) }
+        }
+    }
+
+    internal fun certSha256Hex(der: ByteArray): String {
         val digest = MessageDigest.getInstance("SHA-256")
         return digest.digest(der).joinToString(":") { b -> "%02X".format(b) }
     }
