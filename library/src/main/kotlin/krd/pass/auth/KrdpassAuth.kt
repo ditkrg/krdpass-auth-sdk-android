@@ -65,6 +65,10 @@ object KrdpassAuth {
     private var activeLauncher: ActivityResultLauncher<Intent>? = null
     private var activeResultCallback: ((AuthResult) -> Unit)? = null
     private var activeLifecycleOwner: LifecycleOwner? = null
+    // Application context captured at register(), used for the S1 provider cert-pin check.
+    // Holding the *application* context in a process singleton is leak-safe.
+    @Volatile
+    private var appContext: Context? = null
     
     @Volatile
     private var isAuthenticating = false
@@ -107,6 +111,12 @@ object KrdpassAuth {
      * Used internally or for Fragments.
      */
     fun register(caller: ActivityResultCaller, lifecycleOwner: LifecycleOwner) {
+        // Capture an application Context (the caller/owner is a ComponentActivity in the
+        // common path) so the S1 cert-pin check works even if the owner is a Fragment.
+        appContext = appContext
+            ?: (caller as? Context)?.applicationContext
+            ?: (lifecycleOwner as? Context)?.applicationContext
+
         // Register the launcher
         val launcher = caller.registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
@@ -240,15 +250,22 @@ object KrdpassAuth {
         isAuthenticating = true
 
         // S1: verify KRDPass is installed with the expected signing cert before launching.
-        val context = owner as? Context
-        if (context != null) {
-            val providerError = checkProviderInstalled(context, currentConfig.environment)
-            if (providerError != null) {
-                if (allowWhenAuthenticating) isAuthenticating = false
-                activeResultCallback = null
-                callback(AuthResult.Error("provider_not_installed", providerError))
-                return
-            }
+        // Use the captured application context (falls back to the owner if it is a Context).
+        // If no Context is available and a pin is configured, fail CLOSED rather than launch unpinned.
+        val context = appContext ?: (owner as? Context)
+        val providerError = if (context != null) {
+            checkProviderInstalled(context, currentConfig.environment)
+        } else if (currentConfig.environment.providerSigningCertsSha256.isNotEmpty()) {
+            "KRDPass installation could not be verified (no Context available to check the provider signature)."
+        } else {
+            null
+        }
+        if (providerError != null) {
+            // Always clear the in-progress flag (both authenticate and signIn set it before this point).
+            isAuthenticating = false
+            activeResultCallback = null
+            callback(AuthResult.Error("provider_not_installed", providerError))
+            return
         }
 
         try {

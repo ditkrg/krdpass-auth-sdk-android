@@ -405,7 +405,9 @@ class CasClient(
             if (!audience.isNullOrBlank()) audience(audience)
         }.build()
 
-        val requiredClaimNames = mutableSetOf("exp", "iat", "nbf").apply {
+        // Only `exp` is mandatory (a token must expire). `nbf`/`iat` are optional per OIDC and
+        // are still validated *if present* below; requiring them rejects otherwise-valid id_tokens.
+        val requiredClaimNames = mutableSetOf("exp").apply {
             if (!issuer.isNullOrBlank()) add("iss")
             if (!audience.isNullOrBlank()) add("aud")
         }
