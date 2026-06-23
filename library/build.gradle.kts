@@ -16,7 +16,7 @@ version = "1.0.0"
 
 android {
     namespace = "krd.pass.krdpass_auth"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 24
