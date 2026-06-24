@@ -1,0 +1,20 @@
+name: CI
+
+# Build + test only. No publish step (packages are not published yet).
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+      - run: chmod +x gradlew
+      - run: ./gradlew :library:assembleRelease :library:testDebugUnitTest --no-daemon

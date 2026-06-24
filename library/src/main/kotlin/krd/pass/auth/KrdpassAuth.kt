@@ -375,7 +375,7 @@ object KrdpassAuth {
                                val error = when(result) {
                                    is AuthResult.Cancelled -> KrdpassError.UserCancelled()
                                    is AuthResult.Timeout -> KrdpassError.Timeout()
-                                   is AuthResult.Error -> KrdpassError.AuthenticationFailed(result.error)
+                                   is AuthResult.Error -> KrdpassError.AuthenticationFailed(result.message, code = result.error)
                                    else -> KrdpassError.Busy()
                                }
                                callback(Result.failure(error))
@@ -589,34 +589,38 @@ object KrdpassAuth {
      * Cancel any in-flight authentication (authenticate/signIn) flow.
      *
      * Useful when the user returns to your app without completing the flow in
-     * KRDPass (app-switch back). After cancellation, a new flow can start.
+     * KRDPass (app-switch back). After cancellation, a new flow can start. This is
+     * the canonical cross-SDK name, matching the Flutter/React Native SDKs.
+     *
+     * @param timeout when true, completes the pending flow as a timeout instead of
+     *   a cancellation.
      */
-    fun cancel() {
+    fun cancelPendingAuthentication(timeout: Boolean = false) {
         if (!isAuthenticating) return
+        val result: AuthResult = if (timeout) AuthResult.Timeout else AuthResult.Cancelled
         val owner = activeLifecycleOwner
         if (owner != null) {
             owner.lifecycleScope.launch(Dispatchers.Main) {
-                if (isAuthenticating) complete(AuthResult.Cancelled)
+                if (isAuthenticating) complete(result)
             }
         } else {
-            complete(AuthResult.Cancelled)
+            complete(result)
         }
     }
 
-    /**
-     * Force-timeout any in-flight authentication (authenticate/signIn) flow.
-     */
-    fun timeout() {
-        if (!isAuthenticating) return
-        val owner = activeLifecycleOwner
-        if (owner != null) {
-            owner.lifecycleScope.launch(Dispatchers.Main) {
-                if (isAuthenticating) complete(AuthResult.Timeout)
-            }
-        } else {
-            complete(AuthResult.Timeout)
-        }
-    }
+    /** Cancel the in-flight flow. Prefer [cancelPendingAuthentication]. */
+    @Deprecated(
+        "Use cancelPendingAuthentication() for cross-SDK naming parity.",
+        ReplaceWith("cancelPendingAuthentication()"),
+    )
+    fun cancel() = cancelPendingAuthentication(timeout = false)
+
+    /** Force-timeout the in-flight flow. Prefer [cancelPendingAuthentication]. */
+    @Deprecated(
+        "Use cancelPendingAuthentication(timeout = true) for cross-SDK naming parity.",
+        ReplaceWith("cancelPendingAuthentication(timeout = true)"),
+    )
+    fun timeout() = cancelPendingAuthentication(timeout = true)
 
     private fun scheduleTimeout(owner: LifecycleOwner, timeout: kotlin.time.Duration) {
         cancelTimeout()
@@ -692,28 +696,33 @@ object KrdpassAuth {
         clockSkewSeconds: Long = 60,
     ) {
         if (idToken.isNullOrBlank()) {
-            throw KrdpassError.AuthenticationFailed("Token response did not include an id_token")
+            throw KrdpassError.AuthenticationFailed("Token response did not include an id_token", code = "invalid_id_token")
         }
         val claims = try {
             verifyJwt(idToken, jwkSource, issuer, audience, clockSkewSeconds)
         } catch (e: Exception) {
-            throw KrdpassError.AuthenticationFailed("ID token validation failed: ${e.message}")
+            throw KrdpassError.AuthenticationFailed("ID token validation failed: ${e.message}", code = "invalid_id_token")
         }
         val returnedNonce = claims["nonce"] as? String
         if (returnedNonce.isNullOrBlank() || returnedNonce != expectedNonce) {
-            throw KrdpassError.AuthenticationFailed("ID token nonce mismatch (possible token replay)")
+            throw KrdpassError.AuthenticationFailed("ID token nonce mismatch (possible token replay)", code = "nonce_mismatch")
         }
     }
 
+    /**
+     * Verify a JWT using the environment's JWKS endpoint.
+     *
+     * The audience is derived from the configured `clientId` (parity with the
+     * Flutter/React Native SDKs). Validates the RS256 signature, audience, and
+     * expiry; the security-critical [signIn] trust path additionally pins the
+     * issuer and binds the nonce.
+     */
     fun verifyToken(
-        token: String,
-        issuer: String? = null,
-        audience: String? = null,
+        idToken: String,
         clockSkewSeconds: Long = 60
     ): Map<String, Any?> {
         val c = config ?: throw IllegalStateException("Not initialized")
-        val jwksUrl = c.environment.jwksEndpoint
-        return verifyTokenInternal(token, jwksUrl, issuer, audience, clockSkewSeconds)
+        return verifyTokenInternal(idToken, c.environment.jwksEndpoint, null, c.clientId, clockSkewSeconds)
     }
     
     // Internal verification helper to keep main code clean

@@ -12,8 +12,12 @@ KRDPASS identity app (explicit-intent launch + signing-cert pinning, not a brows
 
 ## Install (GitHub Packages)
 
-The SDK is published to **GitHub Packages** (private; no Maven Central / JitPack). Add the
-repository and credentials in your `settings.gradle.kts` (or app `build.gradle.kts`):
+> **Note:** distribution is moving to **Maven Central**. Once published there, consumers
+> will just use `mavenCentral()` with no token or extra repository. The GitHub Packages
+> steps below are interim and subject to change.
+
+The SDK is currently published to **GitHub Packages**. Add the repository and credentials
+in your `settings.gradle.kts` (or app `build.gradle.kts`):
 
 ```kotlin
 dependencyResolutionManagement {

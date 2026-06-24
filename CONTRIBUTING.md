@@ -1,12 +1,12 @@
 # Contributing to KRDPASS Android SDK
 
-This Android SDK is maintained inside the monorepo at `packages/krdpass_auth_android`.
+This is the standalone repository for the KRDPASS Android SDK.
 
 ## Setup
 
 ```bash
-git clone https://github.com/ditkrg/krdpass-auth-sdk.git
-cd krdpass-auth-sdk/packages/krdpass_auth_android
+git clone https://github.com/ditkrg/krdpass-auth-sdk-android.git
+cd krdpass-auth-sdk-android
 ```
 
 ## Prerequisites
