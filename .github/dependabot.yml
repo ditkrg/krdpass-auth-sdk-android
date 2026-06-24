@@ -1,0 +1,24 @@
+# Dependabot keeps the Gradle dependencies (gradle/libs.versions.toml + build.gradle.kts)
+# up to date and opens PRs for security advisories. Combined with GitHub's Dependabot
+# security alerts, this is the per-repo "hook" for dependency vulnerability checks.
+version: 2
+updates:
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    groups:
+      # Batch low-risk patch/minor bumps into a single PR to cut noise.
+      androidx:
+        patterns:
+          - "androidx.*"
+      gradle-plugins:
+        patterns:
+          - "com.android.*"
+          - "org.jetbrains.kotlin*"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
