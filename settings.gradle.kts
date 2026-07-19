@@ -1,0 +1,37 @@
+pluginManagement {
+    repositories {
+        google {
+            content {
+                includeGroupByRegex("com\\.android.*")
+                includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("androidx.*")
+            }
+        }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+    plugins {
+        // AGP 9+ ships Kotlin built-in, so no separate kotlin.android plugin is declared.
+        id("com.android.application") version "9.2.0"
+        id("com.android.library") version "9.2.0"
+    }
+}
+
+plugins {
+    // Toolchain download repositories so jvmToolchain(17) auto-provisioning is reproducible
+    // across machines/CI (and not a Gradle 10 deprecation).
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0"
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.name = "krdpass-auth-sdk-android"
+include(":library")
+// The example is not shipped in the standalone vendor repo; only include it when present.
+if (file("example").exists()) include(":example:app")

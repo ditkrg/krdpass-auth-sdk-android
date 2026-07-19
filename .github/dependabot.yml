@@ -1,0 +1,13 @@
+# Keeps GitHub Actions (SHA-pinned) and Gradle dependencies monitored for updates
+# and security advisories.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+  - package-ecosystem: "gradle"
+    directory: "/library"
+    schedule:
+      interval: "weekly"

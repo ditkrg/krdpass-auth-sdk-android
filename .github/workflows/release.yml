@@ -1,0 +1,56 @@
+name: Release
+
+# Tagging vX.Y.Z publishes the library to Maven Central and creates a GitHub Release.
+on:
+  push:
+    tags: ['v*']
+
+# Least privilege: the default token is read-only; only the release job elevates.
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the GitHub Release
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+        with:
+          cache-disabled: true
+      - run: ./gradlew :library:test
+      - name: Publish to Maven Central
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: |
+          if [ -z "$ORG_GRADLE_PROJECT_signingInMemoryKey" ]; then
+            echo "Signing key not configured yet - skipping Maven Central publish."
+            exit 0
+          fi
+          # Maven Central is immutable: if this version is already live, skip the
+          # publish instead of failing the run (e.g. a tag was re-pushed).
+          VERSION="${GITHUB_REF_NAME#v}"
+          if curl -sfI "https://repo1.maven.org/maven2/krd/pass/krdpass-auth/$VERSION/krdpass-auth-$VERSION.pom" >/dev/null; then
+            echo "krd.pass:krdpass-auth:$VERSION is already on Maven Central - skipping publish."
+            exit 0
+          fi
+          ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || gh release create "$GITHUB_REF_NAME" --generate-notes
