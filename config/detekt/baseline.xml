@@ -1,0 +1,50 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:KrdpassAuth.kt$KrdpassAuth$internal fun decideAuthResult( resultCode: Int, hasUriData: Boolean, redirectValid: Boolean, code: String?, returnedState: String?, error: String?, errorDescription: String?, expectedState: String?, ): AuthResult</ID>
+    <ID>InstanceOfCheckForException:CasClient.kt$CasClient$e is CasException</ID>
+    <ID>InstanceOfCheckForException:KrdpassAuth.kt$KrdpassAuth$e is KrdpassError</ID>
+    <ID>LongParameterList:AuthResultDecisionTest.kt$AuthResultDecisionTest$( resultCode: Int = Activity.RESULT_OK, hasUriData: Boolean = true, redirectValid: Boolean = true, code: String? = null, returnedState: String? = null, error: String? = null, errorDescription: String? = null, expectedState: String? = sentState, )</ID>
+    <ID>LongParameterList:KrdpassAuth.kt$KrdpassAuth$( resultCode: Int, hasUriData: Boolean, redirectValid: Boolean, code: String?, returnedState: String?, error: String?, errorDescription: String?, expectedState: String?, )</ID>
+    <ID>LongParameterList:KrdpassEnvironment.kt$KrdpassEnvironment$( public val authUrl: String, public val authServerUrl: String, public val userInfoEndpoint: String, public val tokenEndpoint: String, public val revocationEndpoint: String, public val parEndpoint: String, public val jwksEndpoint: String, /** Android package name of the KRDPASS provider app for this environment. */ public val providerPackage: String, /** * SHA-256 fingerprints (colon-separated hex, uppercase) of the KRDPASS app signing * certificate(s) for this environment. The SDK verifies the installed KRDPASS app * has one of these certs before launching it. * * These are PINS: build-time trust anchors. They MUST be hardcoded, never fetched at * runtime: fetching the pin over the network you are trying to defend defeats the purpose * and adds an offline/fail-open failure mode. The canonical public source is the KRDPASS * Digital Asset Links file, which publishes the on-device Play App Signing cert(s): * Production: https://app.pass.krd/.well-known/assetlinks.json * Development: https://app.krdpass.dev.krd/.well-known/assetlinks.json * (Equivalently: Play Console &gt; App &gt; Setup &gt; App signing &gt; App signing key certificate.) * * Keep this a Set: to survive a Play App Signing key rotation, ship a release containing * BOTH the outgoing and incoming fingerprints before the on-device cert flips, then drop * the retired one later (a match against any one entry passes). * * An empty set means "no pin configured". In [Development] that skips the check (local/debug * ergonomics); in [Production] the SDK fails closed rather than launch unpinned (see * ProviderVerifier.checkInstalled). Never ship Production with an empty set. */ public val providerSigningCertsSha256: Set&lt;String&gt;, /** * The web URL for this environment. Opening it in a browser takes users to the KRDPASS * install page when the app is not present, or opens the app if already installed. * Surface this URL when returning a `provider_not_installed` error so integrators can * prompt the user to install KRDPASS. */ public val installUrl: String, )</ID>
+    <ID>LongParameterList:TokenVerifier.kt$TokenVerifier$( idToken: String?, jwkSource: JWKSource&lt;SecurityContext&gt;, issuer: String, audience: String, expectedNonce: String, clockSkewSeconds: Long = 60, )</ID>
+    <ID>MagicNumber:CasClient.kt$CasClient$204</ID>
+    <ID>MagicNumber:CasClient.kt$CasClient$400</ID>
+    <ID>MagicNumber:CasClient.kt$CasClient$408</ID>
+    <ID>MagicNumber:CasClient.kt$CasClient$429</ID>
+    <ID>MagicNumber:CasClient.kt$CasClient$499</ID>
+    <ID>MagicNumber:KrdpassTokenResult.kt$KrdpassTokenResult$1000L</ID>
+    <ID>MagicNumber:TokenVerifier.kt$TokenVerifier$1000</ID>
+    <ID>NestedBlockDepth:CasClient.kt$CasClient$private suspend fun &lt;T&gt; retry( maxAttempts: Int = 3, initialDelayMillis: Long = 1000L, action: suspend () -&gt; T ): T</ID>
+    <ID>NewLineAtEndOfFile:CasClientTest.kt$krd.pass.auth.CasClientTest.kt</ID>
+    <ID>NewLineAtEndOfFile:KrdpassAuthCoreTest.kt$krd.pass.auth.KrdpassAuthCoreTest.kt</ID>
+    <ID>NewLineAtEndOfFile:KrdpassAuthValidationTest.kt$krd.pass.auth.KrdpassAuthValidationTest.kt</ID>
+    <ID>NewLineAtEndOfFile:LoggingTest.kt$krd.pass.auth.LoggingTest.kt</ID>
+    <ID>ReturnCount:KrdpassAuth.kt$KrdpassAuth$@JvmStatic public fun authenticate( requestUri: String, state: String?, timeout: kotlin.time.Duration = 5.minutes, callback: (AuthResult) -&gt; Unit )</ID>
+    <ID>ReturnCount:KrdpassAuth.kt$KrdpassAuth$@JvmStatic public fun signIn( scopes: List&lt;String&gt; = listOf("openid", "profile"), timeout: kotlin.time.Duration = 5.minutes, callback: (Result&lt;KrdpassTokenResult&gt;) -&gt; Unit )</ID>
+    <ID>ReturnCount:KrdpassAuth.kt$KrdpassAuth$@JvmStatic public fun startAuthentication( context: Context?, config: KrdpassConfig, requestUri: String, state: String, ): AuthLaunch</ID>
+    <ID>ReturnCount:KrdpassAuth.kt$KrdpassAuth$internal fun decideAuthResult( resultCode: Int, hasUriData: Boolean, redirectValid: Boolean, code: String?, returnedState: String?, error: String?, errorDescription: String?, expectedState: String?, ): AuthResult</ID>
+    <ID>ReturnCount:KrdpassConfig.kt$KrdpassConfig$public fun isValidRedirectUri(uri: Uri): Boolean</ID>
+    <ID>ReturnCount:ProviderVerifier.kt$ProviderVerifier$fun evaluateSigningPin( installedCerts: Set&lt;String&gt;?, expected: Set&lt;String&gt;, isProduction: Boolean, ): String?</ID>
+    <ID>SwallowedException:TokenVerifier.kt$TokenVerifier$e: Exception</ID>
+    <ID>ThrowsCount:CasClient.kt$CasClient$private suspend fun &lt;T&gt; retry( maxAttempts: Int = 3, initialDelayMillis: Long = 1000L, action: suspend () -&gt; T ): T</ID>
+    <ID>ThrowsCount:TokenVerifier.kt$TokenVerifier$fun validateIdTokenWithSource( idToken: String?, jwkSource: JWKSource&lt;SecurityContext&gt;, issuer: String, audience: String, expectedNonce: String, clockSkewSeconds: Long = 60, )</ID>
+    <ID>ThrowsCount:TokenVerifier.kt$TokenVerifier$fun verifyJwt( token: String, source: JWKSource&lt;SecurityContext&gt;, issuer: String?, audience: String?, clockSkewSeconds: Long, ): Map&lt;String, Any?&gt;</ID>
+    <ID>TooGenericExceptionCaught:CasClient.kt$CasClient$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:KrdpassAuth.kt$KrdpassAuth$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:TokenVerifier.kt$TokenVerifier$e: Exception</ID>
+    <ID>TooGenericExceptionThrown:TokenVerifier.kt$TokenVerifier$throw Exception("Token expired")</ID>
+    <ID>TooGenericExceptionThrown:TokenVerifier.kt$TokenVerifier$throw Exception("Token not yet valid")</ID>
+    <ID>TooGenericExceptionThrown:TokenVerifier.kt$TokenVerifier$throw Exception("Token used before issued")</ID>
+    <ID>TooManyFunctions:CasClient.kt$CasClient</ID>
+    <ID>TooManyFunctions:KrdpassAuth.kt$KrdpassAuth</ID>
+    <ID>UseCheckOrError:KrdpassAuth.kt$KrdpassAuth$throw IllegalStateException("Not initialized")</ID>
+    <ID>WildcardImport:AuthResultTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:CasClientTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:KrdpassAuthCoreTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:KrdpassAuthValidationTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:KrdpassConfigTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:PkceGeneratorTest.kt$import org.junit.Assert.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

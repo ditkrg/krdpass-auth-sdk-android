@@ -1,0 +1,10 @@
+# Minimal project override on top of detekt's default ruleset
+# (buildUponDefaultConfig = true in library/build.gradle.kts). Only settings that differ
+# from the defaults live here; everything else uses detekt's standard rules.
+
+build:
+  maxIssues: 0
+
+style:
+  MaxLineLength:
+    active: false # not enforced elsewhere in this codebase (see .editorconfig)
