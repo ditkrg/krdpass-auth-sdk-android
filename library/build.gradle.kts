@@ -52,8 +52,8 @@ val bcvRuntimeClasspath: Configuration = configurations.create("bcvRuntimeClassp
     isCanBeConsumed = false
 }
 dependencies {
-    bcvRuntimeClasspath("org.ow2.asm:asm:9.6")
-    bcvRuntimeClasspath("org.ow2.asm:asm-tree:9.6")
+    bcvRuntimeClasspath("org.ow2.asm:asm:9.10.1")
+    bcvRuntimeClasspath("org.ow2.asm:asm-tree:9.10.1")
     bcvRuntimeClasspath("org.jetbrains.kotlin:kotlin-metadata-jvm:${libs.versions.kotlin.get()}")
 }
 
