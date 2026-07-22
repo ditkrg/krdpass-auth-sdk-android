@@ -34,7 +34,7 @@ Then add the dependency:
 
 ```kotlin
 dependencies {
-    implementation("krd.pass:krdpass-auth:1.1.0")
+    implementation("krd.pass:krdpass-auth:1.1.1")
 }
 ```
 

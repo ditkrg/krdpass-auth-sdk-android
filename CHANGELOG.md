@@ -5,12 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1]
+
+### Fixed
+
+- Restore Expo SDK 55 consumer compatibility by publishing Kotlin 2.2 metadata
+  and using kotlinx-serialization 1.9, the newest release whose metadata its
+  Kotlin 2.1 compiler can read.
+
+### Changed
+
+- Update OkHttp 5.1 -> 5.4 and the AndroidX testing libraries without changing
+  the public API.
+
 ## [1.1.0]
 
 ### Changed
 
 - Toolchain currency: Kotlin 2.2.20 -> 2.4.0 and kotlinx-serialization 1.9.0 -> 1.10.0.
-  No public API or behavior change (guarded by the new API-compatibility baseline).
+  No public API or behavior change (guarded by the API-compatibility baseline).
 
 ### Added
 

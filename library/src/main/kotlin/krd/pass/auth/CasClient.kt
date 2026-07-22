@@ -51,7 +51,7 @@ public class CasClient(
         parse: (body: String) -> T,
     ): T = retry(maxAttempts) {
         httpClient.newCall(request).execute().use { response ->
-            val body = response.body?.string().orEmpty()
+            val body = response.body.string()
             if (!response.isSuccessful && response.code !in okStatusCodes) {
                 log("ERROR", "$label failed (${response.code}): $body")
                 throw CasException("$label failed (${response.code}): ${parseCasError(body)}", response.code)

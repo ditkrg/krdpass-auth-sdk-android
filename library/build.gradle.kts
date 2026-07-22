@@ -133,7 +133,7 @@ mavenPublishing {
     publishToMavenCentral()
     signAllPublications()
 
-    coordinates("krd.pass", "krdpass-auth", "1.1.0")
+    coordinates("krd.pass", "krdpass-auth", "1.1.1")
 
     pom {
         name.set("KRDPASS Auth SDK (Android)")
