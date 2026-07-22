@@ -20,7 +20,7 @@ pluginManagement {
 plugins {
     // Toolchain download repositories so jvmToolchain(17) auto-provisioning is reproducible
     // across machines/CI (and not a Gradle 10 deprecation).
-    id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0"
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
 dependencyResolutionManagement {
