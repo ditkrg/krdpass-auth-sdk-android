@@ -12,7 +12,7 @@ pluginManagement {
     }
     plugins {
         // AGP 9+ ships Kotlin built-in, so no separate kotlin.android plugin is declared.
-        id("com.android.application") version "9.3.0"
+        id("com.android.application") version "9.3.1"
         id("com.android.library") version "9.3.0"
     }
 }
