@@ -1,0 +1,99 @@
+name: Release
+
+# Tagging vX.Y.Z publishes the library to Maven Central and creates a GitHub Release.
+on:
+  push:
+    tags: ['v*']
+
+# Least privilege: the default token is read-only; only the release job elevates.
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: maven-central
+    permissions:
+      contents: write # create the GitHub Release
+      id-token: write # sign the build provenance attestation
+      attestations: write # store the build provenance attestation
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Maven Central is immutable and the publish below uses VERSION_NAME, not the tag. If the
+      # two disagree, the "already published" probe checks the wrong coordinate and the wrong
+      # version goes out with no way to undo it. Fail here, before anything is built or uploaded.
+      - name: Verify the tag against the version and the changelog
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          VERSION="$(sed -n 's/^VERSION_NAME=//p' gradle.properties)"
+          if [ -z "$VERSION" ]; then
+            echo "gradle.properties has no VERSION_NAME." >&2
+            exit 1
+          fi
+          if [ "$TAG" != "v$VERSION" ]; then
+            echo "Tag $TAG does not match VERSION_NAME $VERSION." >&2
+            exit 1
+          fi
+          if ! grep -q "^## \[$VERSION\]" CHANGELOG.md; then
+            echo "CHANGELOG.md has no '## [$VERSION]' entry." >&2
+            exit 1
+          fi
+          echo "Tag $TAG matches VERSION_NAME $VERSION and CHANGELOG.md documents it."
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        with:
+          cache-disabled: true
+      # check = test + lint + detekt + apiCheck.
+      - run: ./gradlew :library:check
+      - name: Publish to Maven Central
+        id: publish
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: |
+          # No signing key means nothing can be published. Cutting a GitHub Release with
+          # no artifact behind it is worse than a red run, so fail instead of skipping.
+          if [ -z "$ORG_GRADLE_PROJECT_signingInMemoryKey" ]; then
+            echo "SIGNING_KEY is not configured, so nothing can be published to Maven Central." >&2
+            exit 1
+          fi
+          # Maven Central is immutable: if this version is already live, skip the
+          # publish instead of failing the run (e.g. a tag was re-pushed).
+          VERSION="${GITHUB_REF_NAME#v}"
+          if curl -sfI "https://repo1.maven.org/maven2/krd/pass/krdpass-auth/$VERSION/krdpass-auth-$VERSION.pom" >/dev/null; then
+            echo "krd.pass:krdpass-auth:$VERSION is already on Maven Central - skipping publish."
+            echo "published=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache
+          echo "published=true" >> "$GITHUB_OUTPUT"
+      # The Gradle plugin stages exactly what it uploads to the Central Portal under
+      # library/build/publishing/mavenCentral, so these are the published artifacts.
+      # Skipped when the publish was skipped, because then there is nothing to attest.
+      - name: Attest build provenance for the published artifacts
+        if: steps.publish.outputs.published == 'true'
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: |
+            library/build/publishing/mavenCentral/krd/pass/krdpass-auth/*/*.aar
+            library/build/publishing/mavenCentral/krd/pass/krdpass-auth/*/*.jar
+            library/build/publishing/mavenCentral/krd/pass/krdpass-auth/*/*.pom
+            library/build/publishing/mavenCentral/krd/pass/krdpass-auth/*/*.module
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || gh release create "$GITHUB_REF_NAME" --generate-notes
