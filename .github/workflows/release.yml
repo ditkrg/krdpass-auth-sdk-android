@@ -1,6 +1,5 @@
 name: Release
 
-# Tagging vX.Y.Z publishes the library to Maven Central and creates a GitHub Release.
 on:
   push:
     tags: ['v*']
@@ -55,7 +54,6 @@ jobs:
       - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
         with:
           cache-disabled: true
-      # check = test + lint + detekt + apiCheck.
       - run: ./gradlew :library:check
       - name: Publish to Maven Central
         id: publish

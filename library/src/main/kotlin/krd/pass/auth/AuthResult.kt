@@ -13,13 +13,10 @@ public sealed class AuthResult {
         }
     }
 
-    /** User cancelled the authentication. */
     public data object Cancelled : AuthResult()
 
-    /** Authentication timed out. */
     public data object Timeout : AuthResult()
 
-    /** Another authentication is already in progress. */
     public data object Busy : AuthResult()
 
     /**
@@ -73,7 +70,7 @@ internal val AuthResult.logLabel: String get() = when (this) {
 
 /**
  * The error codes the SDK recognizes in [AuthResult.Error.error]. The wire string stays the field
- * of record (marshalled byte-identically across the iOS/Flutter/RN SDKs); this enum gives callers
+ * of record (marshalled byte-identically across every KRDPASS SDK); this enum gives callers
  * typed access to the known ones.
  */
 public enum class AuthErrorCode(public val wire: String) {

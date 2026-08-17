@@ -85,9 +85,6 @@ afterEvaluate {
     }
 }
 
-// Static analysis: minimal ruleset on top of detekt's defaults, with a baseline of manually
-// curated suppressions, each a considered decision with its reasoning written next to it (see
-// config/detekt/baseline.xml). A finding that is not listed there fails the build.
 detekt {
     buildUponDefaultConfig = true
     config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
@@ -113,18 +110,11 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    // The library generates no BuildConfig fields; don't emit the class.
     buildFeatures {
         buildConfig = false
     }
 }
 
-// Published to Maven Central under the GROUP / POM_ARTIFACT_ID / VERSION_NAME in
-// gradle.properties: consumers resolve it with `mavenCentral()`, no token. The plugin builds
-// the sources + javadoc jars, GPG-signs every
-// artifact, and uploads + releases through the Central Portal. Credentials/signing key come
-// from ORG_GRADLE_PROJECT_* env vars in CI (see .github/workflows/release.yml).
-//
 // The sample-app runner may instead provide `krdpassLocalMavenRepo`. That publishes the same
 // metadata and artifacts to an SDK-local repository for development consumers, without needing
 // credentials or a signing key. It deliberately does not change the release path.

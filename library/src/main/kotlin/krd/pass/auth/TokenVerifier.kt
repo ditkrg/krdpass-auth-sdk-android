@@ -23,8 +23,7 @@ import java.util.concurrent.ConcurrentHashMap
 internal class InvalidTokenClaimException(message: String) : BadJWTException(message)
 
 /**
- * OIDC/JWT verification + JWKS caching. The security-critical verification math exists exactly
- * once, here.
+ * OIDC/JWT verification + JWKS caching.
  */
 internal object TokenVerifier {
 
@@ -43,7 +42,7 @@ internal object TokenVerifier {
     // must never satisfy a Production verification from a cached Development key set.
     private val jwksSources = ConcurrentHashMap<String, JWKSource<SecurityContext>>()
 
-    /** Drop the cached JWKS: call when the configured environment changes. */
+    /** Call when the configured environment changes. */
     fun clearCache() {
         jwksSources.clear()
     }
@@ -90,7 +89,7 @@ internal object TokenVerifier {
         expectedNonce: String,
         clockSkewSeconds: Long = 60,
     ) {
-        // Structured codes match the iOS SDK (invalid_id_token / nonce_mismatch).
+        // Structured codes shared with every KRDPASS SDK (invalid_id_token / nonce_mismatch).
         if (idToken.isNullOrBlank()) {
             throw KrdpassError.AuthenticationFailed(
                 KrdpassMessages.MISSING_ID_TOKEN, code = "invalid_id_token")
@@ -128,9 +127,13 @@ internal object TokenVerifier {
         audience: String?,
         clockSkewSeconds: Long,
     ): Map<String, Any?> {
+        // Blank is a caller mistake, not "no audience": treating it as unset would drop the aud
+        // and azp checks and accept a token minted for a different client. Null still means
+        // "do not check", which only the tests use.
+        require(audience == null || audience.isNotBlank()) { "audience cannot be blank" }
         val skew = clockSkewSeconds.coerceIn(0, MAX_CLOCK_SKEW_SECONDS)
-        // RS256 exactly, not Family.RSA: CAS issues RS256 only, and the iOS SDK and reference
-        // backend pin RS256 only. A family-wide selector would also accept RS384/512 and PS256/384/512.
+        // RS256 exactly, not Family.RSA: CAS and the reference backend issue RS256 only. A
+        // family-wide selector would also accept RS384/512 and PS256/384/512.
         val selector = JWSVerificationKeySelector(JWSAlgorithm.RS256, source)
         val processor = DefaultJWTProcessor<SecurityContext>().apply { jwsKeySelector = selector }
 
@@ -155,12 +158,10 @@ internal object TokenVerifier {
 
         val claims = processor.process(token, null)
 
-        // OIDC Core 3.1.3.7: azp must name this client when present, and must be present when aud
-        // carries more than one value. Nimbus checks neither. The multi-audience arm cannot fire
-        // while the aud pin above stays exact; kept for whoever relaxes that pin.
+        // OIDC Core 3.1.3.7: azp must name this client when present. Nimbus does not check it.
         if (!audience.isNullOrBlank()) {
             val azp = claims.claims["azp"] as? String
-            if ((azp != null || claims.audience.orEmpty().size > 1) && azp != audience) {
+            if (azp != null && azp != audience) {
                 throw InvalidTokenClaimException("Token azp does not name the expected client")
             }
         }
@@ -173,8 +174,18 @@ internal object TokenVerifier {
             }
         }
 
-        return claims.claims
+        return normalizeClaims(claims.claims)
     }
+
+    /**
+     * Nimbus parses `aud` into a list whichever form the token used, losing the wire shape. A
+     * single-element list collapses back to a string so all four SDKs report one audience the
+     * same way; anything else is returned untouched.
+     */
+    private fun normalizeClaims(claims: Map<String, Any?>): Map<String, Any?> =
+        claims.mapValues { (name, value) ->
+            if (name == "aud") (value as? List<*>)?.singleOrNull() ?: value else value
+        }
 
     /**
      * Decode a JWT's claims **without verifying its signature**. SECURITY: the returned claims are
@@ -183,7 +194,9 @@ internal object TokenVerifier {
      */
     fun decodeTokenUnverified(token: String): Map<String, Any?> {
         return try {
-            JWTParser.parse(token).jwtClaimsSet.claims
+            val claims = JWTParser.parse(token).jwtClaimsSet
+                ?: throw IllegalArgumentException("Not a valid JWT")
+            normalizeClaims(claims.claims)
         } catch (e: ParseException) {
             throw IllegalArgumentException("Not a valid JWT", e)
         }

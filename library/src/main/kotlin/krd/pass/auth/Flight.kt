@@ -30,14 +30,12 @@ internal class Flight {
     @Volatile
     var deadline: kotlin.time.ComparableTimeMark? = null
 
-    /** The terminal result, once someone claimed it. */
     val result: AuthResult?
         get() = outcome.get()
 
     /** Claim the terminal outcome. Only the winner delivers it. */
     fun settle(result: AuthResult): Boolean = outcome.compareAndSet(null, result)
 
-    /** Take the installed waiter, if any and only once. */
     fun takeWaiter(): ((AuthResult) -> Unit)? = waiter.getAndSet(null)
 
     /**

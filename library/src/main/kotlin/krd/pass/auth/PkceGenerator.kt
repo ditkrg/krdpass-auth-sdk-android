@@ -6,13 +6,8 @@ import java.security.SecureRandom
 
 /** An RFC 7636 PKCE code verifier and S256 challenge pair. */
 public data class PkcePair(
-    /** The code verifier (43-128 characters, base64url alphabet). */
     val codeVerifier: String,
-
-    /** The code challenge (base64url-encoded SHA256 hash of verifier). */
     val codeChallenge: String,
-
-    /** The challenge method (always 'S256' for this implementation). */
     val method: String = "S256"
 ) {
     override fun toString(): String {
@@ -38,7 +33,6 @@ public object PkceGenerator {
         )
     }
 
-    /** Computes the S256 challenge for a given verifier. */
     public fun computeChallenge(verifier: String): String {
         val hash = MessageDigest.getInstance("SHA-256").digest(verifier.toByteArray())
         return base64UrlEncodeNoPadding(hash)

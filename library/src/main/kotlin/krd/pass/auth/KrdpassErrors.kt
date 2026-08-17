@@ -8,11 +8,6 @@ import java.text.ParseException
 import kotlinx.coroutines.CancellationException
 
 /**
- * The SDK's error boundary: everything that turns an internal failure ([CasException], a Nimbus
- * or JOSE exception, a raw [IOException]) into the public [KrdpassError] model.
- */
-
-/**
  * Run a [CasClient] call, translating [CasException] and raw transport [IOException]s into the
  * public [KrdpassError] model. The message carries through verbatim: it holds the HTTP status and
  * the parsed OAuth error, the caller's only diagnostic. [KrdpassError.AuthenticationFailed.code]

@@ -80,7 +80,6 @@ public object KrdpassAuth {
     @Volatile
     private var appContext: Context? = null
 
-    /** The one slot: null when no flow is running. */
     private val inFlight = AtomicReference<Flight?>(null)
 
     /**
@@ -234,7 +233,6 @@ public object KrdpassAuth {
         return flight
     }
 
-    /** Take the single in-flight slot, or null when another flow already holds it. */
     private fun claimFlight(): Flight? {
         val flight = Flight()
         if (inFlight.compareAndSet(null, flight)) return flight
@@ -242,7 +240,6 @@ public object KrdpassAuth {
         return null
     }
 
-    /** Launch a prepared [AuthLaunch] for an already-claimed [flight], wiring its state + timeout. */
     private fun beginLaunch(
         flight: Flight,
         launch: AuthLaunch,
@@ -280,7 +277,6 @@ public object KrdpassAuth {
         }
     }
 
-    /** Suspend bridge over the callback-based [beginLaunch], so signIn() can read linearly. */
     private suspend fun awaitLaunch(
         flight: Flight,
         launch: AuthLaunch,
@@ -298,7 +294,6 @@ public object KrdpassAuth {
     internal fun boundToParExpiry(timeout: kotlin.time.Duration, parExpiresInSeconds: Int): kotlin.time.Duration =
         minOf(timeout, parExpiresInSeconds.seconds)
 
-    /** Map a non-success [AuthResult] to the typed [KrdpassError] used by the signIn() API. */
     private fun authResultToError(result: AuthResult): KrdpassError = when (result) {
         is AuthResult.Cancelled -> KrdpassError.UserCancelled()
         is AuthResult.Timeout -> KrdpassError.Timeout()
@@ -390,21 +385,28 @@ public object KrdpassAuth {
         flight: Flight,
         callback: SignInCallback,
     ) {
+        var settled = false
         try {
             val context = appContext ?: (activeLifecycleOwner as? Context)
             val (launch, pending) = startSignIn(context, currentConfig, scopes)
             val boundedTimeout = boundToParExpiry(timeout, pending.parExpiresInSeconds)
             when (val result = awaitLaunch(flight, launch, pending.state, boundedTimeout)) {
-                is AuthResult.Success -> callback.onSuccess(
-                    translatingCasErrors {
+                is AuthResult.Success -> {
+                    val tokens = translatingCasErrors {
                         exchangeAndValidate(result.code, pending.codeVerifier, pending.nonce, currentConfig)
-                    })
+                    }
+                    // Outside the try: a host whose onSuccess throws must not then be handed
+                    // onFailure for the same flow.
+                    settled = true
+                    callback.onSuccess(tokens)
+                }
                 else -> callback.onFailure(authResultToError(result))
             }
         } catch (e: kotlinx.coroutines.CancellationException) {
             // Structured-concurrency cancellation must propagate, not become a KrdpassError.
             throw e
         } catch (e: Exception) {
+            if (settled) throw e
             // Anything unexpected is a failure of this sign-in, not a retryable transport problem.
             callback.onFailure(
                 if (e is KrdpassError) e
@@ -436,9 +438,8 @@ public object KrdpassAuth {
     }
 
     // Stateless, launch-decoupled API: holds no per-flow state, launcher or LifecycleOwner, so any
-    // host (Expo/RN, a Service, Compose) reuses the full security flow. Mirrors the iOS core.
+    // host (Expo/RN, a Service, Compose) reuses the full security flow.
 
-    /** Outcome of preparing a provider launch. */
     public sealed class AuthLaunch {
         /**
          * Prepared provider launch. Every host must pass [activityOptions] with [intent]:
@@ -503,7 +504,6 @@ public object KrdpassAuth {
         return prepareLaunch(context, config, requestUri, state)
     }
 
-    /** [startAuthentication] minus the config check, for the callers that already made it. */
     private fun prepareLaunch(
         context: Context?,
         config: KrdpassConfig,
@@ -541,11 +541,14 @@ public object KrdpassAuth {
         config: KrdpassConfig,
         expectedState: String,
     ): AuthResult {
-        val uri = data?.data
+        // getQueryParameter throws on an opaque URI, and arguments evaluate eagerly, so reading
+        // one here would escape this policy and leave the flight unsettled. An opaque result can
+        // never be our https redirect anyway, so it fails closed as invalid_redirect.
+        val uri = data?.data?.takeIf { it.isHierarchical }
         return decideAuthResult(
             resultCode = resultCode,
-            hasUriData = uri != null,
-            redirectValid = uri == null || config.isValidRedirectUri(uri),
+            hasUriData = data?.data != null,
+            redirectValid = uri != null && config.isValidRedirectUri(uri),
             code = uri?.getQueryParameter("code"),
             returnedState = uri?.getQueryParameter("state"),
             error = uri?.getQueryParameter("error"),
@@ -609,7 +612,6 @@ public object KrdpassAuth {
         }
     }
 
-    /** Code exchange + id_token (nonce) validation, shared by signIn() and finishSignIn(). */
     private suspend fun exchangeAndValidate(
         code: String,
         codeVerifier: String,
@@ -622,7 +624,6 @@ public object KrdpassAuth {
         tokens
     }
 
-    /** @throws KrdpassError.ConfigurationError if [config] cannot be used for a flow. */
     private fun validateConfig(config: KrdpassConfig) {
         val uri = config.redirectUri.toUri()
         val problem = when {
@@ -642,6 +643,12 @@ public object KrdpassAuth {
     private fun authenticationLaunchOptions(): ActivityOptionsCompat =
         ActivityOptionsCompat.makeBasic().setShareIdentityEnabled(true)
 
+    /**
+     * `redirect_uri` is redundant under RFC 9126, which binds it in the PAR body, but the provider
+     * reads it from here to carry an OAuth error back before it resolves the request_uri; dropping
+     * it costs `request_expired` on every already-installed KRDPASS build. `state` rides along
+     * because the provider echoes it on redirects it generates before resolving the request_uri.
+     */
     internal fun buildAuthorizationUrl(config: KrdpassConfig, requestUri: String, state: String?): String {
         val builder = config.environment.authUrl.toUri().buildUpon()
             .appendQueryParameter("client_id", config.clientId)
@@ -716,7 +723,6 @@ public object KrdpassAuth {
         return AuthResult.Error("no_code", KrdpassMessages.NO_CODE)
     }
 
-    /** Fails closed on a state we never recorded, never got back, or that does not match. */
     private fun isStateMismatch(expectedState: String?, returnedState: String?): Boolean {
         if (expectedState.isNullOrBlank() || returnedState.isNullOrBlank()) return true
         return !MessageDigest.isEqual(
@@ -814,8 +820,8 @@ public object KrdpassAuth {
 
     /**
      * [refreshTokens] against an explicit client and environment, without initializing the SDK.
-     * A returned non-blank `id_token` is verified the way [verifyToken] verifies one (mirrors the
-     * iOS SDK); a refresh response with no `id_token` stays valid, OAuth does not require one.
+     * A returned non-blank `id_token` is verified the way [verifyToken] verifies one; a refresh
+     * response with no `id_token` stays valid, OAuth does not require one.
      */
     @JvmStatic
     @JvmOverloads
@@ -837,7 +843,6 @@ public object KrdpassAuth {
         result
     }
 
-    /** Verifies a refresh response's `id_token` like [verifyToken] does; absent or blank is left alone. */
     internal suspend fun verifyRefreshedIdTokenIfPresent(
         idToken: String?,
         jwksUrl: String,
@@ -870,8 +875,8 @@ public object KrdpassAuth {
     /**
      * Verify an OIDC/JWT against the configured environment's JWKS: signature, required `exp`,
      * `iss` pinned to the authorization server, `aud` bound to the configured `clientId`.
-     * Failures arrive as [KrdpassError.AuthenticationFailed] with the same codes the iOS, Flutter
-     * and RN SDKs use: `invalid_id_token`, `network_error` (JWKS fetch failed, retry may help), or
+     * Failures arrive as [KrdpassError.AuthenticationFailed] with these codes:
+     * `invalid_id_token`, `network_error` (JWKS fetch failed, retry may help), or
      * `verification_failed`. The nonce replay binding belongs to the [signIn] trust path.
      *
      * @param clockSkewSeconds tolerance for `exp`, `nbf` and `iat`; clamped to 0..300, since a

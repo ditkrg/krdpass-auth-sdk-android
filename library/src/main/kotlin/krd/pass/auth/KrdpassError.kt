@@ -2,7 +2,7 @@ package krd.pass.auth
 
 /**
  * Canonical, user-safe error messages shared by [KrdpassError] and [AuthResult.message]. Keep
- * these byte-identical with the iOS/Flutter/RN SDKs (guarded by AuthResultTest).
+ * these byte-identical across every KRDPASS SDK (guarded by AuthResultTest).
  */
 internal object KrdpassMessages {
     const val CANCELLED = "Authentication was cancelled"
@@ -23,7 +23,7 @@ internal object KrdpassMessages {
 /** Errors thrown by the signIn authentication flow. */
 public sealed class KrdpassError(message: String, cause: Throwable? = null) : Exception(message, cause) {
     /**
-     * The canonical wire code for this failure, byte-identical with the iOS/Flutter/RN SDKs.
+     * The canonical wire code for this failure, byte-identical across every KRDPASS SDK.
      * Abstract so a new subclass that forgets its code is a compile error, not a silent null on
      * the wire. Null only on [AuthenticationFailed], when the failure had no code.
      */
@@ -49,7 +49,7 @@ public sealed class KrdpassError(message: String, cause: Throwable? = null) : Ex
     public class AuthenticationFailed(
         override val message: String,
         /** The structured wire code (`state_mismatch`, `nonce_mismatch`, a CAS OAuth code), when
-         *  one exists. Mirrors the iOS `authenticationFailed(_, code:)` shape. */
+         *  one exists. */
         override val code: String? = null,
         public val installUrl: String? = null,
     ) : KrdpassError(message)

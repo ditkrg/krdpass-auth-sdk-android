@@ -39,6 +39,20 @@ class JwtVerificationTest {
         val claims = TokenVerifier.verifyJwt(token, jwkSource, issuer, audience, 60)
         assertEquals("user-123", claims["sub"])
         assertEquals(issuer, claims["iss"])
+        assertEquals(audience, claims["aud"])
+    }
+
+    @Test
+    fun `a blank audience is rejected rather than treated as no audience check`() {
+        // The explicit-client overloads take a caller-supplied clientId. Treating "" as unset
+        // would drop the aud and azp checks and accept a token minted for a different client.
+        val token = mint(signingKey, audience = "some-other-client")
+        try {
+            TokenVerifier.verifyJwt(token, jwkSource, issuer, "", 60)
+            fail("Expected a blank audience to be rejected")
+        } catch (e: IllegalArgumentException) {
+            assertTrue(e.message!!.contains("audience"))
+        }
     }
 
     @Test
@@ -174,7 +188,6 @@ class JwtVerificationTest {
     @Test
     fun `validateIdToken accepts a fully valid token whose nonce matches`() {
         val token = mint(signingKey, nonce = "nonce-123")
-        // Should not throw.
         TokenVerifier.validateIdTokenWithSource(token, jwkSource, issuer, audience, "nonce-123")
     }
 

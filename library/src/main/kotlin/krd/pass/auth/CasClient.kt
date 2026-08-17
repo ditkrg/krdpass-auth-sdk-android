@@ -32,13 +32,12 @@ internal class CasClient internal constructor(
         request: Request,
         label: String,
         maxAttempts: Int = 3,
-        okStatusCodes: Set<Int> = emptySet(),
         parse: (body: String) -> T,
     ): T {
         val body = retry(maxAttempts) {
             httpClient.newCall(request).executeAsync().use { response ->
                 val text = response.body.string()
-                if (!response.isSuccessful && response.code !in okStatusCodes) {
+                if (!response.isSuccessful) {
                     // Status only: the KrdpassLogger contract promises no raw upstream content.
                     log("ERROR", "$label failed (${response.code})")
                     throw CasException("$label failed (${response.code}): ${parseCasError(text)}", response.code)
@@ -199,11 +198,9 @@ internal class CasClient internal constructor(
         val request = Request.Builder().url(url).post(requestBody).build()
         log("DEBUG", "Revoking token at: $url (client_id=$clientId, token=[REDACTED], hint=$tokenTypeHint)")
 
-        // RFC 7009: a successful revocation returns 200; some servers return 204 (no content).
-        execute(request, "Token revocation", okStatusCodes = setOf(HTTP_NO_CONTENT)) { }
+        execute(request, "Token revocation") { }
     }
 
-    /** Best-effort OAuth error string; falls back to the raw body, redacted and bounded. */
     private fun parseCasError(body: String): String {
         if (body.isBlank()) return body
         return try {
@@ -211,8 +208,9 @@ internal class CasClient internal constructor(
             val error = json.optString("error")
             val description = json.optString("error_description")
             when {
-                error.isNotBlank() && description.isNotBlank() -> "$error: ${sanitizeRawBody(description)}"
-                error.isNotBlank() -> error
+                error.isNotBlank() && description.isNotBlank() ->
+                    "${sanitizeRawBody(error)}: ${sanitizeRawBody(description)}"
+                error.isNotBlank() -> sanitizeRawBody(error)
                 else -> sanitizeRawBody(body)
             }
         } catch (_: JSONException) {
@@ -227,14 +225,15 @@ internal class CasClient internal constructor(
      * back in its error body would otherwise send it straight into an app's crash reporter.
      */
     private fun sanitizeRawBody(body: String): String {
-        // JWT shape first, so a three-segment token collapses to one marker instead of three.
-        return body
+        // Bound first: both patterns backtrack quadratically on a long unbroken base64url run,
+        // and this body is whatever the upstream sent. JWT shape next, so a three-segment token
+        // collapses to one marker instead of three. A credential cut by the bound still leaves a
+        // 32-character run for the second pattern.
+        return body.bounded()
             .replace(JWT_SHAPED, REDACTED)
             .replace(LONG_BASE64URL_RUN, REDACTED)
-            .bounded()
     }
 
-    /** Fails closed on a missing access_token. */
     private fun parseTokenResult(body: String): KrdpassTokenResult {
         val json = JSONObject(body)
         val accessToken = json.optString("access_token")
@@ -252,8 +251,8 @@ internal class CasClient internal constructor(
     }
 
     private fun parseUserInfo(json: JSONObject): KrdpassUserInfo {
-        // getString throws on an absent `sub` but not an empty one. Reject empty (not
-        // whitespace-only) too, matching the iOS, Flutter and RN SDKs.
+        // getString throws on an absent `sub` but not an empty one. Empty is rejected here;
+        // whitespace-only is deliberately not, so every SDK accepts the same userinfo response.
         val sub = json.getString("sub")
         if (sub.isEmpty()) {
             throw JSONException("Invalid user info response: missing or empty sub field")
@@ -307,8 +306,6 @@ internal class CasClient internal constructor(
     }
 
     internal companion object {
-        private const val HTTP_NO_CONTENT = 204
-
         /** CAS defaults, applied when the response omits the lifetime. */
         private const val DEFAULT_PAR_EXPIRES_IN_SECONDS = 300
         private const val DEFAULT_TOKEN_EXPIRES_IN_SECONDS = 3600

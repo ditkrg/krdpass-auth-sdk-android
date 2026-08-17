@@ -22,6 +22,7 @@ Protocol reference:
 ## Requirements
 
 - `minSdk` 24, `compileSdk` 36, JDK 17
+- Compiled with Kotlin 2.2.21. Your app can use a newer Kotlin.
 - A `clientId`, approved scopes, and an HTTPS `redirectUri`
 
 ## Install
@@ -63,7 +64,7 @@ KrdpassAuth.initialize(
 KrdpassAuth.register(this)
 ```
 
-Miss this and every flow fails with `platform_error`.
+Miss this and `authenticate` fails with `platform_error`, `signIn` with `invalid_request`.
 
 **3a. Client-only sign-in.** Client-only sign-in needs a public client, and none is currently
 issued for any integration, so use the server-mediated flow (3b). It is documented here because

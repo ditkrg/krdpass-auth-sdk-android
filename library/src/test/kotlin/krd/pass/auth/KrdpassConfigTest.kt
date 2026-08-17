@@ -16,7 +16,6 @@ class KrdpassConfigTest {
 
         val testUri = Uri.parse("myapp://callback")
 
-        // Should reject even if scheme matches - only HTTPS allowed
         assertFalse(config.isValidRedirectUri(testUri))
     }
 

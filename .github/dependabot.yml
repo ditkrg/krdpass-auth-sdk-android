@@ -1,5 +1,3 @@
-# Keeps GitHub Actions (SHA-pinned) and Gradle dependencies monitored for updates
-# and security advisories.
 version: 2
 updates:
   - package-ecosystem: "github-actions"

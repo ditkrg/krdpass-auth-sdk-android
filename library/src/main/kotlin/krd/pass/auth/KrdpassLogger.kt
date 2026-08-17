@@ -12,7 +12,6 @@ public fun interface KrdpassLogger {
     public fun log(level: String, message: String)
 }
 
-/** Emit a line to the installed [KrdpassLogger], if any. */
 internal fun log(level: String, message: String) {
     KrdpassAuth.logger?.log(level, message)
 }

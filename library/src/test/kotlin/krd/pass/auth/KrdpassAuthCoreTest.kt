@@ -34,6 +34,9 @@ class KrdpassAuthCoreTest {
 
         assertTrue("Dev URL should start with dev auth URL", authUrl.startsWith("https://app.krdpass.dev.krd/connect/authorize?"))
         assertTrue("Dev URL should contain dev client_id", authUrl.contains("client_id=dev_client"))
+        assertTrue(
+            "Dev URL should contain redirect_uri",
+            authUrl.contains("redirect_uri=https%3A%2F%2Fdev.example.com%2Fcallback"))
     }
 
     @Test

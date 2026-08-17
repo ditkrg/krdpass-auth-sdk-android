@@ -54,7 +54,6 @@ class RefreshTokenVerificationTest {
     fun `a present valid id_token is verified against the JWKS endpoint`() = runBlocking {
         val token = mint(signingKey)
 
-        // Should not throw.
         KrdpassAuth.verifyRefreshedIdTokenIfPresent(token, jwks.jwksUrl(), ISSUER, AUDIENCE)
 
         assertEquals("the id_token must actually be checked against the JWKS", 1, jwks.requestCount)
