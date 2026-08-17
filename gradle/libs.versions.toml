@@ -2,7 +2,7 @@
 # Compatibility floor for Maven Central consumers, including the Flutter and RN
 # plugins. A newer consumer can read this library; compiling it with a newer
 # Kotlin would raise the floor for everyone. Samples track current (2.4.x).
-kotlin = "2.2.21"
+kotlin = "2.4.10"
 # AndroidX core/lifecycle/activity are pinned to the latest releases that still support
 # compileSdk 36. The newer 1.19/2.11/1.12 lines require compileSdk 37, and Flutter stable
 # still scaffolds plugins at 36, so adopting them would make the Flutter plugin unconsumable.
