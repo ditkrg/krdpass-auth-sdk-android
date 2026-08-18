@@ -1,0 +1,351 @@
+public final class krd/pass/auth/AuthErrorCode : java/lang/Enum {
+	public static final field CANCELLED Lkrd/pass/auth/AuthErrorCode;
+	public static final field Companion Lkrd/pass/auth/AuthErrorCode$Companion;
+	public static final field INVALID_REDIRECT Lkrd/pass/auth/AuthErrorCode;
+	public static final field INVALID_REQUEST Lkrd/pass/auth/AuthErrorCode;
+	public static final field ISSUER_MISMATCH Lkrd/pass/auth/AuthErrorCode;
+	public static final field LAUNCH_FAILED Lkrd/pass/auth/AuthErrorCode;
+	public static final field NO_CODE Lkrd/pass/auth/AuthErrorCode;
+	public static final field PLATFORM_ERROR Lkrd/pass/auth/AuthErrorCode;
+	public static final field PROVIDER_NOT_INSTALLED Lkrd/pass/auth/AuthErrorCode;
+	public static final field REQUEST_EXPIRED Lkrd/pass/auth/AuthErrorCode;
+	public static final field STATE_MISMATCH Lkrd/pass/auth/AuthErrorCode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getWire ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lkrd/pass/auth/AuthErrorCode;
+	public static fun values ()[Lkrd/pass/auth/AuthErrorCode;
+}
+
+public final class krd/pass/auth/AuthErrorCode$Companion {
+	public final fun fromWire (Ljava/lang/String;)Lkrd/pass/auth/AuthErrorCode;
+}
+
+public abstract class krd/pass/auth/AuthResult {
+	public final fun getMessage ()Ljava/lang/String;
+	public final fun isCancelled ()Z
+}
+
+public final class krd/pass/auth/AuthResult$Busy : krd/pass/auth/AuthResult {
+	public static final field INSTANCE Lkrd/pass/auth/AuthResult$Busy;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class krd/pass/auth/AuthResult$Cancelled : krd/pass/auth/AuthResult {
+	public static final field INSTANCE Lkrd/pass/auth/AuthResult$Cancelled;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class krd/pass/auth/AuthResult$Error : krd/pass/auth/AuthResult {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lkrd/pass/auth/AuthResult$Error;
+	public static synthetic fun copy$default (Lkrd/pass/auth/AuthResult$Error;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lkrd/pass/auth/AuthResult$Error;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCode ()Lkrd/pass/auth/AuthErrorCode;
+	public final fun getError ()Ljava/lang/String;
+	public final fun getErrorDescription ()Ljava/lang/String;
+	public final fun getInstallUrl ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class krd/pass/auth/AuthResult$Success : krd/pass/auth/AuthResult {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lkrd/pass/auth/AuthResult$Success;
+	public static synthetic fun copy$default (Lkrd/pass/auth/AuthResult$Success;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lkrd/pass/auth/AuthResult$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCode ()Ljava/lang/String;
+	public final fun getState ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class krd/pass/auth/AuthResult$Timeout : krd/pass/auth/AuthResult {
+	public static final field INSTANCE Lkrd/pass/auth/AuthResult$Timeout;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class krd/pass/auth/KrdpassAuth {
+	public static final field DEFAULT_TIMEOUT_MILLIS J
+	public static final field INSTANCE Lkrd/pass/auth/KrdpassAuth;
+	public final synthetic fun authenticate (Ljava/lang/String;Ljava/lang/String;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun authenticate (Ljava/lang/String;Ljava/lang/String;JLkotlin/jvm/functions/Function1;)V
+	public static final fun authenticate (Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun authenticate$default (Ljava/lang/String;Ljava/lang/String;JLkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public static synthetic fun authenticate$default (Lkrd/pass/auth/KrdpassAuth;Ljava/lang/String;Ljava/lang/String;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun cancelPendingAuthentication ()V
+	public static final fun cancelPendingAuthentication (Z)V
+	public static synthetic fun cancelPendingAuthentication$default (ZILjava/lang/Object;)V
+	public static final fun decodeTokenUnverified (Ljava/lang/String;)Ljava/util/Map;
+	public static final fun finishSignIn (ILandroid/content/Intent;Lkrd/pass/auth/KrdpassConfig;Lkrd/pass/auth/KrdpassAuth$SignInPending;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun generatePkcePair ()Lkrd/pass/auth/PkcePair;
+	public static final fun generateState ()Ljava/lang/String;
+	public static final fun getConfig ()Lkrd/pass/auth/KrdpassConfig;
+	public static final fun getLogger ()Lkrd/pass/auth/KrdpassLogger;
+	public static final fun getUserInfo (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun getUserInfo (Ljava/lang/String;Lkrd/pass/auth/KrdpassEnvironment;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun handleAuthorizationResult (ILandroid/content/Intent;Lkrd/pass/auth/KrdpassConfig;Ljava/lang/String;)Lkrd/pass/auth/AuthResult;
+	public static final fun initialize (Lkrd/pass/auth/KrdpassConfig;)V
+	public static final fun refreshTokens (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun refreshTokens (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun refreshTokens (Ljava/lang/String;Lkrd/pass/auth/KrdpassEnvironment;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun refreshTokens (Ljava/lang/String;Lkrd/pass/auth/KrdpassEnvironment;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun refreshTokens$default (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun refreshTokens$default (Ljava/lang/String;Lkrd/pass/auth/KrdpassEnvironment;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun register (Landroidx/activity/ComponentActivity;)V
+	public static final fun register (Landroidx/activity/result/ActivityResultCaller;Landroidx/lifecycle/LifecycleOwner;)V
+	public static final fun revokeToken (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun revokeToken (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun revokeToken (Ljava/lang/String;Lkrd/pass/auth/KrdpassEnvironment;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun revokeToken (Ljava/lang/String;Lkrd/pass/auth/KrdpassEnvironment;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun revokeToken$default (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun revokeToken$default (Ljava/lang/String;Lkrd/pass/auth/KrdpassEnvironment;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun setLogger (Lkrd/pass/auth/KrdpassLogger;)V
+	public final synthetic fun signIn (Ljava/util/List;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun signIn (Ljava/util/List;JLkrd/pass/auth/SignInCallback;)V
+	public static final fun signIn (Ljava/util/List;Lkrd/pass/auth/SignInCallback;)V
+	public static final fun signIn (Lkrd/pass/auth/SignInCallback;)V
+	public static synthetic fun signIn$default (Ljava/util/List;JLkrd/pass/auth/SignInCallback;ILjava/lang/Object;)V
+	public static synthetic fun signIn$default (Lkrd/pass/auth/KrdpassAuth;Ljava/util/List;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun startAuthentication (Landroid/content/Context;Lkrd/pass/auth/KrdpassConfig;Ljava/lang/String;Ljava/lang/String;)Lkrd/pass/auth/KrdpassAuth$AuthLaunch;
+	public static final fun startSignIn (Landroid/content/Context;Lkrd/pass/auth/KrdpassConfig;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun startSignIn$default (Landroid/content/Context;Lkrd/pass/auth/KrdpassConfig;Ljava/util/List;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun verifyToken (Ljava/lang/String;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun verifyToken (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun verifyToken (Ljava/lang/String;Lkrd/pass/auth/KrdpassEnvironment;Ljava/lang/String;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun verifyToken (Ljava/lang/String;Lkrd/pass/auth/KrdpassEnvironment;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun verifyToken$default (Ljava/lang/String;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun verifyToken$default (Ljava/lang/String;Lkrd/pass/auth/KrdpassEnvironment;Ljava/lang/String;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract class krd/pass/auth/KrdpassAuth$AuthLaunch {
+}
+
+public final class krd/pass/auth/KrdpassAuth$AuthLaunch$Failure : krd/pass/auth/KrdpassAuth$AuthLaunch {
+	public fun <init> (Lkrd/pass/auth/AuthResult$Error;)V
+	public final fun component1 ()Lkrd/pass/auth/AuthResult$Error;
+	public final fun copy (Lkrd/pass/auth/AuthResult$Error;)Lkrd/pass/auth/KrdpassAuth$AuthLaunch$Failure;
+	public static synthetic fun copy$default (Lkrd/pass/auth/KrdpassAuth$AuthLaunch$Failure;Lkrd/pass/auth/AuthResult$Error;ILjava/lang/Object;)Lkrd/pass/auth/KrdpassAuth$AuthLaunch$Failure;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Lkrd/pass/auth/AuthResult$Error;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class krd/pass/auth/KrdpassAuth$AuthLaunch$Ready : krd/pass/auth/KrdpassAuth$AuthLaunch {
+	public fun <init> (Landroid/content/Intent;)V
+	public final fun component1 ()Landroid/content/Intent;
+	public final fun copy (Landroid/content/Intent;)Lkrd/pass/auth/KrdpassAuth$AuthLaunch$Ready;
+	public static synthetic fun copy$default (Lkrd/pass/auth/KrdpassAuth$AuthLaunch$Ready;Landroid/content/Intent;ILjava/lang/Object;)Lkrd/pass/auth/KrdpassAuth$AuthLaunch$Ready;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getActivityOptions ()Landroid/os/Bundle;
+	public final fun getIntent ()Landroid/content/Intent;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class krd/pass/auth/KrdpassAuth$SignInPending {
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class krd/pass/auth/KrdpassConfig {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lkrd/pass/auth/KrdpassEnvironment;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lkrd/pass/auth/KrdpassEnvironment;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lkrd/pass/auth/KrdpassEnvironment;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lkrd/pass/auth/KrdpassEnvironment;)Lkrd/pass/auth/KrdpassConfig;
+	public static synthetic fun copy$default (Lkrd/pass/auth/KrdpassConfig;Ljava/lang/String;Ljava/lang/String;Lkrd/pass/auth/KrdpassEnvironment;ILjava/lang/Object;)Lkrd/pass/auth/KrdpassConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getClientId ()Ljava/lang/String;
+	public final fun getEnvironment ()Lkrd/pass/auth/KrdpassEnvironment;
+	public final fun getRedirectUri ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isValidRedirectUri (Landroid/net/Uri;)Z
+	public final fun isValidRedirectUri (Ljava/lang/String;)Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class krd/pass/auth/KrdpassEnvironment : java/lang/Enum {
+	public static final field Development Lkrd/pass/auth/KrdpassEnvironment;
+	public static final field Production Lkrd/pass/auth/KrdpassEnvironment;
+	public final fun getAuthServerUrl ()Ljava/lang/String;
+	public final fun getAuthUrl ()Ljava/lang/String;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getInstallUrl ()Ljava/lang/String;
+	public final fun getJwksEndpoint ()Ljava/lang/String;
+	public final fun getParEndpoint ()Ljava/lang/String;
+	public final fun getProviderPackage ()Ljava/lang/String;
+	public final fun getProviderSigningCertsSha256 ()Ljava/util/Set;
+	public final fun getRevocationEndpoint ()Ljava/lang/String;
+	public final fun getTokenEndpoint ()Ljava/lang/String;
+	public final fun getUserInfoEndpoint ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lkrd/pass/auth/KrdpassEnvironment;
+	public static fun values ()[Lkrd/pass/auth/KrdpassEnvironment;
+}
+
+public abstract class krd/pass/auth/KrdpassError : java/lang/Exception {
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public abstract fun getCode ()Ljava/lang/String;
+}
+
+public final class krd/pass/auth/KrdpassError$AuthenticationFailed : krd/pass/auth/KrdpassError {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getCode ()Ljava/lang/String;
+	public final fun getInstallUrl ()Ljava/lang/String;
+	public fun getMessage ()Ljava/lang/String;
+}
+
+public final class krd/pass/auth/KrdpassError$Busy : krd/pass/auth/KrdpassError {
+	public fun <init> ()V
+	public fun getCode ()Ljava/lang/String;
+}
+
+public final class krd/pass/auth/KrdpassError$ConfigurationError : krd/pass/auth/KrdpassError {
+	public fun <init> (Ljava/lang/String;)V
+	public fun getCode ()Ljava/lang/String;
+	public fun getMessage ()Ljava/lang/String;
+}
+
+public final class krd/pass/auth/KrdpassError$NetworkError : krd/pass/auth/KrdpassError {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getCause ()Ljava/lang/Throwable;
+	public fun getCode ()Ljava/lang/String;
+	public fun getMessage ()Ljava/lang/String;
+}
+
+public final class krd/pass/auth/KrdpassError$Timeout : krd/pass/auth/KrdpassError {
+	public fun <init> ()V
+	public fun getCode ()Ljava/lang/String;
+}
+
+public final class krd/pass/auth/KrdpassError$UserCancelled : krd/pass/auth/KrdpassError {
+	public fun <init> ()V
+	public fun getCode ()Ljava/lang/String;
+}
+
+public abstract interface class krd/pass/auth/KrdpassLogger {
+	public abstract fun log (Ljava/lang/String;Ljava/lang/String;)V
+}
+
+public final class krd/pass/auth/KrdpassScopes {
+	public static final field CITIZEN_IDENTITY Ljava/lang/String;
+	public static final field INSTANCE Lkrd/pass/auth/KrdpassScopes;
+	public static final field OFFLINE_ACCESS Ljava/lang/String;
+	public static final field OPENID Ljava/lang/String;
+	public static final field PROFILE Ljava/lang/String;
+}
+
+public final class krd/pass/auth/KrdpassTokenResult {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;J)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;JILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()I
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()J
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;J)Lkrd/pass/auth/KrdpassTokenResult;
+	public static synthetic fun copy$default (Lkrd/pass/auth/KrdpassTokenResult;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;JILjava/lang/Object;)Lkrd/pass/auth/KrdpassTokenResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAccessToken ()Ljava/lang/String;
+	public final fun getExpiresIn ()I
+	public final fun getIdToken ()Ljava/lang/String;
+	public final fun getReceivedAt ()J
+	public final fun getRefreshToken ()Ljava/lang/String;
+	public final fun getScope ()Ljava/lang/String;
+	public final fun getTokenType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isExpired (J)Z
+	public static synthetic fun isExpired$default (Lkrd/pass/auth/KrdpassTokenResult;JILjava/lang/Object;)Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class krd/pass/auth/KrdpassUserInfo {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component10 ()Ljava/lang/String;
+	public final fun component11 ()Ljava/lang/String;
+	public final fun component12 ()Ljava/lang/String;
+	public final fun component13 ()Ljava/lang/String;
+	public final fun component14 ()Ljava/lang/String;
+	public final fun component15 ()Ljava/util/List;
+	public final fun component16 ()Ljava/lang/String;
+	public final fun component17 ()Ljava/util/Map;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun component8 ()Ljava/lang/String;
+	public final fun component9 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/Map;)Lkrd/pass/auth/KrdpassUserInfo;
+	public static synthetic fun copy$default (Lkrd/pass/auth/KrdpassUserInfo;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lkrd/pass/auth/KrdpassUserInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBirthdate ()Ljava/lang/String;
+	public final fun getCitizenFirst ()Ljava/lang/String;
+	public final fun getCitizenFullName ()Ljava/lang/String;
+	public final fun getCitizenProfilePicture ()Ljava/lang/String;
+	public final fun getCitizenSecond ()Ljava/lang/String;
+	public final fun getCitizenSurname ()Ljava/lang/String;
+	public final fun getCitizenThird ()Ljava/lang/String;
+	public final fun getDid ()Ljava/lang/String;
+	public final fun getEmail ()Ljava/lang/String;
+	public final fun getFamilyName ()Ljava/lang/String;
+	public final fun getGivenName ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getPicture ()Ljava/lang/String;
+	public final fun getRaw ()Ljava/util/Map;
+	public final fun getSexAtBirth ()Ljava/lang/String;
+	public final fun getSub ()Ljava/lang/String;
+	public final fun getUpn ()Ljava/lang/String;
+	public final fun getUpns ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class krd/pass/auth/PkceGenerator {
+	public static final field INSTANCE Lkrd/pass/auth/PkceGenerator;
+	public final fun computeChallenge (Ljava/lang/String;)Ljava/lang/String;
+	public final fun generate ()Lkrd/pass/auth/PkcePair;
+}
+
+public final class krd/pass/auth/PkcePair {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lkrd/pass/auth/PkcePair;
+	public static synthetic fun copy$default (Lkrd/pass/auth/PkcePair;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lkrd/pass/auth/PkcePair;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCodeChallenge ()Ljava/lang/String;
+	public final fun getCodeVerifier ()Ljava/lang/String;
+	public final fun getMethod ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class krd/pass/auth/SignInCallback {
+	public abstract fun onFailure (Ljava/lang/Throwable;)V
+	public abstract fun onSuccess (Lkrd/pass/auth/KrdpassTokenResult;)V
+}
+

@@ -1,0 +1,36 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 10
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    # Flutter stable still scaffolds plugins at compileSdk 36. These AndroidX
+    # lines require compileSdk 37, so adopting them in the shared native core
+    # would make the current Flutter plugin impossible to consume.
+    ignore:
+      - dependency-name: "androidx.core:core"
+        versions: [">=1.19.0"]
+      - dependency-name: "androidx.activity:activity"
+        versions: [">=1.12.0"]
+      - dependency-name: "androidx.lifecycle:lifecycle-common"
+        versions: [">=2.10.0"]
+      - dependency-name: "androidx.lifecycle:lifecycle-runtime-ktx"
+        versions: [">=2.10.0"]
+      # This shares the "kotlin" version ref with the compiler, so a bump here moves the
+      # whole toolchain and raises the Kotlin floor for every Maven Central consumer.
+      - dependency-name: "org.jetbrains.kotlin:kotlin-metadata-jvm"
+        versions: [">=2.3.0"]
+      # library/build.gradle.kts wires this plugin's KotlinApiBuildTask and
+      # KotlinApiCompareTask types directly, because its own Android auto-configuration
+      # cannot be applied under AGP 9. Any bump can change those internal types and
+      # break the build, so it is upgraded by hand.
+      - dependency-name: "org.jetbrains.kotlinx.binary-compatibility-validator"

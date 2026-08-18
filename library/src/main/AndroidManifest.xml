@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- The SDK calls CAS directly (PAR, token exchange, refresh, revoke, userinfo, JWKS). -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Package visibility (Android 11+): the SDK checks for and launches the KRDPASS
+         provider app, which requires it to be queryable. Mirrors KrdpassEnvironment. -->
+    <queries>
+        <package android:name="krd.pass" /> <!-- Production -->
+        <package android:name="krd.pass.dev" /> <!-- Development -->
+    </queries>
+
+</manifest>
