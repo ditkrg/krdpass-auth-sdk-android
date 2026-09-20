@@ -5,14 +5,14 @@ identity app with an explicit intent and receives the result through the Activit
 API. It is not a browser or WebView flow.
 
 Full integration guide, onboarding, error codes and security requirements:
-**[KRDPASS documentation](https://docs.digital.gov.krd/software-development/04-interoperability/11-krdpass-sign-in-with-krdpass.html)**
+**[KRDPASS documentation](https://docs.digital.gov.krd/software-development/04-interoperability/11-krdpass-overview.html)**
 
 ## Requirements
 
 - `minSdk` 24, `compileSdk` 36, JDK 17
 - Compiled with Kotlin 2.2.21. Your app can use a newer Kotlin.
 - A `clientId`, approved scopes, and an HTTPS `redirectUri`. See
-  [Getting started](https://docs.digital.gov.krd/software-development/04-interoperability/12-krdpass-getting-started.html).
+  [Getting started](https://docs.digital.gov.krd/software-development/04-interoperability/13-krdpass-onboarding.html).
 
 ## Install
 
@@ -133,13 +133,13 @@ Deliver the result to `KrdpassAuth.handleAuthorizationResult` with the same `sta
 ## Error handling
 
 Every error code, what emits it, and how to handle it:
-[Testing and go-live](https://docs.digital.gov.krd/software-development/04-interoperability/14-krdpass-testing-and-go-live.html).
+[Testing and go-live](https://docs.digital.gov.krd/software-development/04-interoperability/15-krdpass-testing.html).
 
 ## Tokens and identity
 
 `getUserInfo`, `refreshTokens`, `revokeToken`, `verifyToken` and `decodeTokenUnverified` are
 `suspend` functions on `KrdpassAuth`. Scopes, claims and token handling rules:
-[Reference](https://docs.digital.gov.krd/software-development/04-interoperability/15-krdpass-reference.html).
+[Reference](https://docs.digital.gov.krd/software-development/04-interoperability/16-krdpass-reference.html).
 
 The SDK never persists tokens. Storage requirements:
 [Token storage](https://github.com/ditkrg/krdpass-auth-samples/blob/main/docs/TOKEN-STORAGE.md).
